@@ -1,0 +1,232 @@
+﻿<#@ template  language="C#v3.5" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ assembly name="System.Core.dll" #> 
+<#
+
+var elementSrc = new [] 
+{
+  new { name="html",  parent="head",           containsLiterals=false, attributes="" },
+  new { name="head",  parent="html",           containsLiterals=false, attributes="" },
+  new { name="title", parent="head",           containsLiterals=true,  attributes="" },
+  new { name="body",  parent="html",           containsLiterals=false, attributes="" },
+  new { name="p",     parent="body,div,form",  containsLiterals=true,  attributes="" },
+  new { name="form",  parent="body,div",       containsLiterals=false, attributes="action" },
+  new { name="div",   parent="body,div,form",  containsLiterals=false, attributes="" },
+  new { name="b",     parent="p",              containsLiterals=true,  attributes="" }, 
+  new { name="i",     parent="p",              containsLiterals=true,  attributes="" }, 
+  new { name="h1",    parent="body,div,form",  containsLiterals=true,  attributes="" }, 
+  new { name="h2",    parent="body,div,form",  containsLiterals=true,  attributes="" }, 
+  new { name="h3",    parent="body,div,form",  containsLiterals=true,  attributes="" }, 
+  new { name="h4",    parent="body,div,form",  containsLiterals=true,  attributes="" }, 
+  new { name="h5",    parent="body,div,form",  containsLiterals=true,  attributes="" }, 
+  new { name="h6",    parent="body,div,form",  containsLiterals=true,  attributes="" }, 
+  new { name="ul",    parent="body,div,form",  containsLiterals=false, attributes="" }, 
+  new { name="ol",    parent="body,div,form",  containsLiterals=false, attributes="" }, 
+  new { name="li",    parent="ul,ol",          containsLiterals=true,  attributes="" }, 
+};
+
+var elements = elementSrc
+  .Select(e => new 
+  { 
+	name       = e.name, 
+	parent     = e.parent, 
+	className  = ToClassName(e.name), 
+	interfaceName        = ToInterfaceName(e.name),
+	parentClassNames     = ToNames(e.parent, p=>ToClassName(p)),
+	parentInterfaceNames = ToNames(e.parent, p=>ToInterfaceName(p)),
+	containsLiterals     = e.containsLiterals,
+	literalName          = ToClassName(e.name) + "Literal",
+	attributes           = ToNames(e.attributes + ",id,title", s=>s),
+  })
+  .ToList();
+  
+
+#>
+using System;
+using System.Web;
+using System.Web.UI;
+using System.Collections.Generic;
+
+//
+// AUTOMATICALLY CREATED -- DO NOT EDIT
+//
+namespace Mindfire.Web.HtmlGeneration
+{
+	//
+	// AUTOMATICALLY CREATED -- DO NOT EDIT
+	//
+	public static partial class H
+	{
+
+<# foreach(var e in elements) { #>
+        ///<summary>
+        ///Create a new <#= e.className #> element.
+        ///</summary>
+		public static <#= e.className #> <#= e.className #>(params <#=e.interfaceName#>[] contents)
+		{
+			return new <#= e.className #>(contents);
+		}
+
+<# if (e.containsLiterals) { #>
+        ///<summary
+        ///Create a new <#= e.className #> element from string literals.
+        ///</summary>
+		public static <#= e.className #> <#= e.className #>(params string[] contents)
+		{
+			return new <#= e.className #>(contents);
+		}
+
+<# } // end if #>
+
+
+<# } // end for #>
+
+	}
+
+<# foreach(var e in elements) { #>
+
+	//
+	// AUTOMATICALLY CREATED -- DO NOT EDIT
+	//
+
+
+    ///<summary
+    ///A <#= e.className #> HTML element.
+    ///</summary>
+    public partial class <#= e.className #>: Tag<<#= e.interfaceName #>>, <# foreach(var p in e.parentInterfaceNames) { this.Write(p + ", ");} #>  IRenderable
+    {
+        ///<summary
+        ///Create a new <#= e.className #> element.
+        ///</summary>
+		public <#= e.className #>(params <#= e.interfaceName #>[] contents): base("<#= e.name #>", contents)
+		{
+			CustomSetup();
+		}
+
+        partial void CustomSetup();
+
+<# foreach(string attribute in e.attributes) { #>
+
+        ///<summary
+        ///Add a <#= attribute #> attribute
+        ///</summary>
+		public <#= e.className #> @<#= attribute #>(string <#= attribute #>Value)
+		{
+			this.attributes.Add("<#= attribute #>", <#= attribute #>Value);
+			return this;
+		}
+
+<# } #>
+
+		///<summary
+        ///Add a class attribute
+        ///</summary>
+		public <#= e.className #> @class(CssClass classValue)
+		{
+			this.cssClass = classValue;
+			return this;
+		}
+        ///<summary
+        ///Add a style attribute
+        ///</summary>
+		public <#= e.className #> @style(string styleValue)
+		{
+			var currentStyle = "";
+			if (this.attributes.TryGetValue("style", out currentStyle))
+			{
+				this.attributes.Remove("style");
+				this.attributes.Add("style", currentStyle+styleValue);
+			}
+			else			
+			{
+				this.attributes.Add("style", styleValue);
+			}
+			return this;
+		}
+
+
+<# if (e.containsLiterals) { #>
+        ///<summary
+        ///Create a new <#= e.className #> element populated with string literals.
+        ///</summary>
+		public <#= e.className #>(params string[] contents): base("<#= e.name #>", ToLiterals(contents))
+		{
+		}
+		
+		///<summary
+        ///Create new literals
+        ///</summary>
+		private static <#= e.interfaceName #>[] ToLiterals(string[] contents)
+		{
+			var results = new List<<#= e.interfaceName #>>();
+			
+			foreach(var content in contents)
+			{
+				results.Add(new <#= e.literalName #>(content));
+			}
+			
+			return results.ToArray();
+		}
+
+<# } // end if #>
+
+		
+    }
+
+    ///<summary
+    ///The <#= e.interfaceName #> interface, representing elements that can be in a <#= e.className #>.
+    ///</summary>
+    public interface <#= e.interfaceName #>: IRenderable
+    {
+    }
+
+<# if (e.containsLiterals) { #>
+    public partial class <#= e.literalName #>: <#= e.interfaceName #>, IRenderable
+    {
+		string literalText;
+		public <#= e.literalName #>(string literalText)
+		{
+			this.literalText = literalText;
+		}
+		
+		public void Render(System.Web.UI.HtmlTextWriter writer)
+		{
+			writer.Write(this.literalText);
+		}
+    }        
+<# } // end if #>
+
+<# } #>
+
+
+
+
+}
+
+<#+ 
+
+  string ToInterfaceName(string name)
+  {
+	if (name == null) { return null; }
+	else { return "I" + ToClassName(name) + "Element"; }
+  
+  }
+  string ToClassName(string name)
+  {
+    if (name == null) { return null; }
+    else { return name.ToUpper().Substring(0,1) + name.ToLower().Substring(1); }
+  }
+  
+  List<string> ToNames(string raw, Func<string, string> converter)
+  {
+    System.Diagnostics.Debug.WriteLine(raw);
+	return raw
+	  .Split(',')
+	  .Select(s => s.Trim())
+	  .Where(s => s.Length > 0)
+	  .Select(s => converter(s))
+	  .ToList();
+  }
+
+ #>
